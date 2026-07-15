@@ -57,8 +57,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     }
 
 
-@login_router.post("/actual_login")
-def login(
+def authenticate_user(
     user_credentials: UserLogin,
     response: Response,
     db: Session = Depends(get_db),
@@ -87,7 +86,25 @@ def login(
     return {"message": "Login successful"}
 
 
-@login_router.get("/profile")
+@login_router.post("/login")
+def login(
+    user_credentials: UserLogin,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    return authenticate_user(user_credentials, response, db)
+
+
+@login_router.post("/actual_login", include_in_schema=False)
+def actual_login(
+    user_credentials: UserLogin,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    return authenticate_user(user_credentials, response, db)
+
+
+@login_router.get("/me")
 def read_profile(current_user: User = Depends(get_current_user)):
     return {
         "id": current_user.id,
@@ -108,8 +125,13 @@ def logout(response: Response):
     response.delete_cookie(key="access_token")
     return {"message": "Logged out successfully"}
 
+@login_router.get("/profile")
+def read_profile_alias(current_user: User = Depends(get_current_user)):
+    return read_profile(current_user)
+
+
 # We won't allow for email changes just for added security. Only emails and passwords.
-@login_router.patch("/profile")
+@login_router.patch("/me")
 def update_me(
     user_update: UserUpdate,
     db: Session = Depends(get_db),
@@ -133,8 +155,18 @@ def update_me(
         "message": "Account updated successfuly",
     }
 
+
+@login_router.patch("/profile")
+def update_profile_alias(
+    user_update: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return update_me(user_update, db, current_user)
+
+
 # May need to add to later... like deleeting all related is this doing that
-@login_router.delete("/profile")
+@login_router.delete("/me")
 def delete_profile(
     response: Response,
     db: Session = Depends(get_db),
@@ -146,3 +178,12 @@ def delete_profile(
 
     response.delete_cookie(key="access_token", path="/")
     return {"message": "Account and all related data deleted successfully"}
+
+
+@login_router.delete("/profile")
+def delete_profile_alias(
+    response: Response,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return delete_profile(response, db, current_user)
