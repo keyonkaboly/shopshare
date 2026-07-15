@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class RatingCreate(BaseModel):
-    ride_id: int
+    ride_id: int | None = None
     to_user_id: int
     rating_score: int = Field(ge=1, le=5)
     comment: str | None = None
