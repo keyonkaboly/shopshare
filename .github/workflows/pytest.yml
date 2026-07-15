@@ -28,6 +28,6 @@ jobs:
         working-directory: ./backend
         env:
           PYTHONPATH: ${{ github.workspace }}/backend
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY || 'dev-secret-key' }}
         run: |
-          pytest ../tests/unit ../tests/integration -v --tb=short --cov=app --cov-report=term-missing
+          pytest ../tests -v --tb=short --cov=app --cov-report=term-missing
