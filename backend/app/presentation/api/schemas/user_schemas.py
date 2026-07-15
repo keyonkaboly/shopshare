@@ -1,9 +1,19 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Literal, Optional
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
 
 class UserBase(BaseModel):
     username: str = Field(min_length=6, max_length=25)
     email: EmailStr
+    first_name: Optional[str] = Field(default="")
+    last_name: Optional[str] = Field(default="")
+    university: Optional[str] = Field(default="")
+    phone_number: Optional[str] = Field(default="")
+    is_verified_student: Optional[bool] = Field(default=False)
+    profile_photo_url: Optional[str] = Field(default=None)
+    rating: Optional[float] = Field(default=0.0)
+
 
 class UserCreate(UserBase):
     password: str = Field(min_length=6)

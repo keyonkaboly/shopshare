@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
+from datetime import datetime, timezone
+
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
+
 from .database import Base
-from sqlalchemy import DateTime, UTC
-from datetime import datetime
 
 class User(Base):
     __tablename__ = "users"
@@ -16,7 +17,7 @@ class User(Base):
     is_verified_student = Column(Integer, nullable = True)
     profile_photo_url = Column(String, unique=True, nullable=False)
     rating = Column(Float, nullable=False)
-    created_at = Column(DateTime, default=datetime.now(UTC))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class RideOptions(Base):
@@ -29,7 +30,7 @@ class RideOptions(Base):
     available_seats = Column(Integer, nullable=False)
     price_per_person = Column(Float, nullable=False, default=5.0)
     status = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.now(UTC))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class Booking(Base):
