@@ -80,6 +80,8 @@ def authenticate_user(
         value=access_token,
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRY_DURATION * 60,
+        expires=ACCESS_TOKEN_EXPIRY_DURATION * 60,
+        samesite="lax",
         path="/",
     )
 

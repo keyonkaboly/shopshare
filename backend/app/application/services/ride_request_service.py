@@ -33,6 +33,32 @@ def list_requests_for_ride(db: Session, ride_id: int):
     return db.query(RideRequests).filter(RideRequests.ride_id == ride_id).order_by(RideRequests.created_at).all()
 
 
+def list_requests_for_user(db: Session, user_id: int):
+    requests = (
+        db.query(RideRequests)
+        .filter(RideRequests.passenger_id == user_id)
+        .order_by(RideRequests.created_at.desc())
+        .all()
+    )
+
+    ride_ids = [request.ride_id for request in requests]
+    rides = db.query(Rides).filter(Rides.id.in_(ride_ids)).all() if ride_ids else []
+    rides_by_id = {ride.id: ride for ride in rides}
+
+    return [
+        {
+            "id": request.id,
+            "ride_id": request.ride_id,
+            "passenger_id": request.passenger_id,
+            "status": request.status,
+            "created_at": request.created_at,
+            "ride": rides_by_id.get(request.ride_id),
+        }
+        for request in requests
+        if rides_by_id.get(request.ride_id)
+    ]
+
+
 def accept_request(db: Session, request_id: int, host_id: int) -> RideRequests:
     request = db.query(RideRequests).filter(RideRequests.id == request_id).first()
     if not request:

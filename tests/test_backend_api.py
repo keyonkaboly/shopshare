@@ -227,3 +227,50 @@ def test_ratings_flow(client):
     ratings_response = client.get("/users/1/ratings")
     assert ratings_response.status_code == 200
     assert len(ratings_response.json()) == 1
+
+
+def test_login_cookie_persists_for_device_login(client):
+    register_user(client, "deviceuser", "device@example.com")
+
+    login_response = login_user(client, "device@example.com")
+    set_cookie_header = login_response.headers.get("set-cookie", "")
+
+    assert "access_token=" in set_cookie_header
+    assert "Max-Age=2592000" in set_cookie_header
+
+
+def test_rider_can_see_accepted_request_status(client):
+    register_user(client, "hoststatus", "hoststatus@example.com")
+    register_user(client, "riderstatus", "riderstatus@example.com")
+
+    login_user(client, "hoststatus@example.com")
+    ride_time = (datetime.now(timezone.utc) + timedelta(hours=4)).isoformat()
+    ride_response = client.post(
+        "/rides/",
+        json={
+            "pickup_location": "Dorm",
+            "destination": "Costco",
+            "departure_time": ride_time,
+            "available_seats": 1,
+            "price_per_person": 6.0,
+        },
+    )
+    ride_id = ride_response.json()["id"]
+
+    client.cookies.clear()
+    login_user(client, "riderstatus@example.com")
+    client.post(f"/rides/{ride_id}/join")
+
+    client.cookies.clear()
+    login_user(client, "hoststatus@example.com")
+    client.post(f"/rides/{ride_id}/requests/1/accept")
+
+    client.cookies.clear()
+    login_user(client, "riderstatus@example.com")
+    response = client.get("/rides/me/requests")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["status"] == "accepted"
+    assert payload[0]["ride"]["destination"] == "Costco"

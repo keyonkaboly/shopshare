@@ -3,6 +3,7 @@ annotated-types==0.7.0
 anyio==4.13.0
 cffi==2.0.0
 click==8.3.3
+bcrypt==4.0.1
 cryptography==48.0.0
 dnspython==2.8.0
 ecdsa==0.19.2
@@ -13,12 +14,14 @@ h11==0.16.0
 idna==3.13
 iniconfig==2.3.0
 packaging==26.2
+passlib[bcrypt]==1.7.4
 pluggy==1.6.0
 pyasn1==0.6.3
 pycparser==3.0
 pydantic==2.13.4
 pydantic_core==2.46.4
 pytest==7.4.3
+pytest-cov==7.1.0
 python-dotenv==1.0.0
 python-jose==3.3.0
 rsa==4.9.1
@@ -27,4 +30,5 @@ SQLAlchemy==2.0.23
 starlette==1.0.0
 typing-inspection==0.4.2
 typing_extensions==4.15.0
+httpx==0.28.1
 uvicorn==0.46.0

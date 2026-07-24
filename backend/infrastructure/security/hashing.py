@@ -20,8 +20,8 @@ load_dotenv()  # fallback to the current working directory
 SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET_KEY") or "dev-secret-key"
 
 ALGORITHM = "HS256"
-# Minutes till your access token expires, toggle high/low for tests
-ACCESS_TOKEN_EXPIRY_DURATION = 30
+# Minutes till your access token expires.
+ACCESS_TOKEN_EXPIRY_DURATION = 60 * 24 * 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
