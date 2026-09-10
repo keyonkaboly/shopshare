@@ -208,12 +208,47 @@ function navigate(path) {
   window.location.hash = path;
 }
 
+// api.me() (and any fetch) throws if the request never reaches a server at
+// all — wrong host, backend down, offline. That's a normal, expected state
+// (e.g. this page deployed with no public backend configured yet) and must
+// not be allowed to propagate out of router() uncaught: router() runs
+// before anything is painted into #view, so an uncaught throw here means
+// the page never renders *anything* — a silent white screen with no clue
+// why, rather than the connectivity message below.
+async function checkSession() {
+  try {
+    return await api.me();
+  } catch (err) {
+    return { ok: false, status: 0, data: null, networkError: true };
+  }
+}
+
+function renderConnectivityError() {
+  const shell = document.getElementById('shell');
+  shell.innerHTML = '';
+  shell.classList.add('shell--hidden');
+  document.getElementById('view').innerHTML = `
+    <div class="page page--narrow">
+      <div class="empty-state">
+        <h2>Can't reach the ShopShare server</h2>
+        <p class="muted">
+          This page is trying to reach the backend at <code>${escapeHtml(API_BASE)}</code>
+          and getting no response. If you're the developer: the backend either isn't
+          running, or (if this is deployed) isn't set up to be publicly reachable yet —
+          see shopshare-web/README.md.
+        </p>
+        <button class="btn btn--primary" onclick="location.reload()">Retry</button>
+      </div>
+    </div>`;
+}
+
 async function router() {
   const path = currentPath();
   closeModal();
 
   if (!PUBLIC_ROUTES.has(path)) {
-    const res = await api.me();
+    const res = await checkSession();
+    if (res.networkError) { renderConnectivityError(); return; }
     if (res.ok) {
       state.me = res.data;
     } else {
@@ -225,7 +260,8 @@ async function router() {
     }
   } else if (path === '/login' || path === '/register') {
     // If already logged in, skip straight past the auth screens.
-    const res = await api.me();
+    const res = await checkSession();
+    if (res.networkError) { renderConnectivityError(); return; }
     if (res.ok) {
       state.me = res.data;
       navigate('/');
