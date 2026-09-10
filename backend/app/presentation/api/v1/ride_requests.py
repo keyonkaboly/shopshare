@@ -16,8 +16,12 @@ def get_my_ride_requests(db: Session = Depends(get_db), current_user: User = Dep
 
 
 @ride_request_router.get("/{ride_id}/requests", response_model=list[RideRequestResponse])
-def get_ride_requests(ride_id: int, db: Session = Depends(get_db)):
-    return list_requests_for_ride(db, ride_id)
+def get_ride_requests(
+    ride_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return list_requests_for_ride(db, ride_id, current_user.id)
 
 
 @ride_request_router.post("/{ride_id}/requests/{request_id}/accept", response_model=RideRequestResponse)

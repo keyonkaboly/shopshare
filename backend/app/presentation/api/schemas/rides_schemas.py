@@ -28,5 +28,6 @@ class RidesUpdate(BaseModel):
 class RidesResponse(RidesBase):
     id: int
     host_id: int
+    host_username: str = Field(default="")
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)

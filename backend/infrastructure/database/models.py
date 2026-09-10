@@ -18,6 +18,7 @@ class User(Base):
     is_verified_student = Column(Boolean, nullable=True)
     profile_photo_url = Column(String, nullable=False)
     rating = Column(Float, default=0.0, nullable=False)
+    terms_accepted_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
@@ -77,3 +78,33 @@ class RideRatings(Base):
     rating_score = Column(Integer, nullable=False)
     comment = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class Payments(Base):
+    __tablename__ = "payments"
+    id = Column(Integer, primary_key=True, index=True)
+    ride_id = Column(Integer, ForeignKey("rides.id"), nullable=False)
+    ride_request_id = Column(Integer, ForeignKey("ride_requests.id"), nullable=False, unique=True)
+    payer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    payee_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    amount_cents = Column(Integer, nullable=False)
+    currency = Column(String, nullable=False, default="usd")
+    stripe_payment_intent_id = Column(String, nullable=True)
+    # pending -> succeeded | failed
+    status = Column(String, nullable=False, default="pending")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class DriverVerification(Base):
+    __tablename__ = "driver_verifications"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    stripe_verification_session_id = Column(String, nullable=True)
+    # unverified -> pending -> verified | rejected
+    status = Column(String, nullable=False, default="unverified")
+    vehicle_make = Column(String, nullable=True)
+    vehicle_model = Column(String, nullable=True)
+    vehicle_color = Column(String, nullable=True)
+    vehicle_plate = Column(String, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

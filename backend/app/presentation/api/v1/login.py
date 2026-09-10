@@ -1,10 +1,10 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.application.services.login_service import get_current_user
+from app.application.services.login_service import delete_user_account, get_current_user
 from app.presentation.api.schemas.user_schemas import UserCreate, UserLogin, UserUpdate
 from infrastructure.database.database import get_db
 from infrastructure.database.models import User
@@ -20,6 +20,12 @@ login_router = APIRouter(prefix="/login", tags=["login"])
 
 @login_router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
+    if not user.terms_accepted:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You must accept the Terms of Service and Privacy Policy to register",
+        )
+
     hashed_password = hash_password(user.password)
 
     profile_photo_url = user.profile_photo_url or f"{user.username}.png"
@@ -35,6 +41,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         is_verified_student=int(getattr(user, "is_verified_student", False) or False),
         profile_photo_url=profile_photo_url,
         rating=getattr(user, "rating", 0.0) or 0.0,
+        terms_accepted_at=datetime.now(timezone.utc),
     )
 
     db.add(new_user)
@@ -148,12 +155,23 @@ def update_me(
     if user_update.password:
         current_user.password_hash = hash_password(user_update.password)
 
+    for field in ("first_name", "last_name", "university", "phone_number", "profile_photo_url"):
+        value = getattr(user_update, field)
+        if value is not None:
+            setattr(current_user, field, value)
+
     db.commit()
     db.refresh(current_user)
 
     return {
         "id": current_user.id,
         "username": current_user.username,
+        "email": current_user.email,
+        "first_name": current_user.first_name,
+        "last_name": current_user.last_name,
+        "university": current_user.university,
+        "phone_number": current_user.phone_number,
+        "profile_photo_url": current_user.profile_photo_url,
         "message": "Account updated successfuly",
     }
 
@@ -174,9 +192,7 @@ def delete_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    
-    db.delete(current_user)
-    db.commit()
+    delete_user_account(db, current_user)
 
     response.delete_cookie(key="access_token", path="/")
     return {"message": "Account and all related data deleted successfully"}

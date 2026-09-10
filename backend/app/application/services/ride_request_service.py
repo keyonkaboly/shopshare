@@ -13,7 +13,11 @@ def create_request(db: Session, ride_id: int, passenger_id: int, message: str | 
     if ride.host_id == passenger_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You cannot request your own ride")
 
-    existing = db.query(RideRequests).filter(RideRequests.ride_id == ride_id, RideRequests.passenger_id == passenger_id).first()
+    existing = db.query(RideRequests).filter(
+        RideRequests.ride_id == ride_id,
+        RideRequests.passenger_id == passenger_id,
+        RideRequests.status != "rejected",
+    ).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You already requested this ride")
 
@@ -26,10 +30,12 @@ def create_request(db: Session, ride_id: int, passenger_id: int, message: str | 
     return request
 
 
-def list_requests_for_ride(db: Session, ride_id: int):
+def list_requests_for_ride(db: Session, ride_id: int, requesting_user_id: int):
     ride = db.query(Rides).filter(Rides.id == ride_id).first()
     if not ride:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ride not found")
+    if ride.host_id != requesting_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the host can view requests for this ride")
     return db.query(RideRequests).filter(RideRequests.ride_id == ride_id).order_by(RideRequests.created_at).all()
 
 

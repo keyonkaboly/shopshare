@@ -53,6 +53,7 @@ def register_user(client, username, email, password="password123"):
         "phone_number": "123456789",
         "is_verified_student": True,
         "profile_photo_url": "avatar.png",
+        "terms_accepted": True,
     }
     response = client.post("/login/register", json=payload)
     assert response.status_code == 200, response.text

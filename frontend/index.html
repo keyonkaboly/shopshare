@@ -3,17 +3,662 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Shopshare</title>
+    <title>Shopshare | Your Rides</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.5; }
-      .card { max-width: 600px; padding: 1.5rem; border: 1px solid #ddd; border-radius: 8px; }
+      :root {
+        --bg: #0b1020;
+        --bg-soft: rgba(17, 24, 39, 0.72);
+        --panel: rgba(15, 23, 42, 0.88);
+        --panel-2: rgba(30, 41, 59, 0.72);
+        --text: #e5eefb;
+        --muted: #9fb0c7;
+        --line: rgba(148, 163, 184, 0.22);
+        --accent: #67e8f9;
+        --accent-2: #f59e0b;
+        --good: #34d399;
+        --bad: #f87171;
+        --shadow: 0 24px 80px rgba(2, 6, 23, 0.45);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; }
+      body {
+        margin: 0;
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(103, 232, 249, 0.14), transparent 28%),
+          radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 24%),
+          linear-gradient(180deg, #070b14 0%, #0b1020 52%, #090d17 100%);
+      }
+
+      .wrap { max-width: 1400px; margin: 0 auto; padding: 28px; }
+      .hero {
+        display: grid;
+        grid-template-columns: 1.25fr 0.75fr;
+        gap: 20px;
+        align-items: stretch;
+        margin-bottom: 22px;
+      }
+      .hero-card,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(16px);
+        border-radius: 24px;
+      }
+      .hero-card { padding: 28px; overflow: hidden; position: relative; }
+      .hero-card::after {
+        content: "";
+        position: absolute;
+        inset: auto -120px -140px auto;
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(103, 232, 249, 0.18), transparent 70%);
+        pointer-events: none;
+      }
+      h1 { margin: 0 0 8px; font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.02; }
+      .lead { max-width: 68ch; color: var(--muted); font-size: 1.02rem; line-height: 1.6; margin: 0; }
+      .meta-row {
+        display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px;
+      }
+      .pill {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 10px 14px; border-radius: 999px;
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid var(--line); color: var(--text); font-size: 0.92rem;
+      }
+      .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 20px rgba(103, 232, 249, 0.7); }
+      .stats {
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 28px;
+      }
+      .stat {
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 18px; padding: 18px;
+      }
+      .stat .label { color: var(--muted); font-size: 0.88rem; margin-bottom: 10px; }
+      .stat .value { font-size: 1.8rem; font-weight: 800; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+      .stack { display: grid; gap: 20px; }
+      .panel { padding: 20px; }
+      .panel h2, .panel h3 { margin: 0 0 14px; }
+      .panel h2 { font-size: 1.15rem; }
+      .panel h3 { font-size: 1rem; color: #dbe7f5; }
+      .subtle { color: var(--muted); font-size: 0.92rem; }
+      .form-grid { display: grid; gap: 10px; }
+      input, button, textarea, select {
+        width: 100%; border-radius: 14px; border: 1px solid var(--line);
+        background: rgba(2, 6, 23, 0.32); color: var(--text);
+        padding: 12px 14px; font: inherit;
+      }
+      textarea { min-height: 92px; resize: vertical; }
+      button {
+        cursor: pointer; font-weight: 700; transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+      }
+      button:hover { transform: translateY(-1px); border-color: rgba(103, 232, 249, 0.45); }
+      button.primary { background: linear-gradient(135deg, rgba(103, 232, 249, 0.95), rgba(34, 211, 238, 0.78)); color: #04111b; }
+      button.secondary { background: rgba(30, 41, 59, 0.7); }
+      button.danger { background: rgba(127, 29, 29, 0.56); }
+      button.ghost { background: transparent; }
+      .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      .tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+      .tab { padding: 10px 14px; border-radius: 999px; background: rgba(15, 23, 42, 0.65); border: 1px solid var(--line); }
+      .tab.active { background: rgba(103, 232, 249, 0.18); border-color: rgba(103, 232, 249, 0.3); }
+      .list { display: grid; gap: 14px; }
+      .card {
+        padding: 16px; border-radius: 18px; background: rgba(2, 6, 23, 0.28); border: 1px solid var(--line);
+      }
+      .card-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+      .title { font-weight: 800; font-size: 1.02rem; margin: 0 0 4px; }
+      .muted { color: var(--muted); font-size: 0.9rem; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+      .badge {
+        display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px;
+        border-radius: 999px; background: rgba(15, 23, 42, 0.72); border: 1px solid var(--line); font-size: 0.84rem;
+      }
+      .badge.good { border-color: rgba(52, 211, 153, 0.35); color: #86efac; }
+      .badge.warn { border-color: rgba(245, 158, 11, 0.35); color: #fcd34d; }
+      .badge.bad { border-color: rgba(248, 113, 113, 0.35); color: #fca5a5; }
+      .split { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .section-title { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom: 12px; }
+      .tiny { font-size: 0.8rem; color: var(--muted); }
+      .hidden { display: none !important; }
+      .empty {
+        padding: 18px; border-radius: 16px; border: 1px dashed rgba(148, 163, 184, 0.3); color: var(--muted);
+      }
+      .toast {
+        position: fixed; right: 18px; bottom: 18px; z-index: 50;
+        max-width: 360px; padding: 14px 16px; border-radius: 16px;
+        background: rgba(15, 23, 42, 0.95); border: 1px solid var(--line);
+        box-shadow: var(--shadow); display: none;
+      }
+      .toast.show { display: block; }
+
+      @media (max-width: 1080px) {
+        .hero, .grid, .split { grid-template-columns: 1fr; }
+      }
     </style>
   </head>
   <body>
-    <div class="card">
-      <h1>Shopshare frontend placeholder</h1>
-      <p>The backend API is available at <a href="http://localhost:8000/docs">http://localhost:8000/docs</a>.</p>
-      <p>This page is a simple placeholder until the real frontend is added.</p>
+    <div class="wrap">
+      <section class="hero">
+        <div class="hero-card">
+          <div class="pill"><span class="dot"></span> Shopshare ride dashboard</div>
+          <h1>Your rides, requests, and ride status in one place.</h1>
+          <p class="lead">
+            Host a ride, approve join requests, and let riders see when their request has been accepted.
+            This page uses the backend session cookie, so once you log in it stays active on your device.
+          </p>
+          <div class="meta-row">
+            <div class="pill">Host requests</div>
+            <div class="pill">Rider request status</div>
+            <div class="pill">Trips overview</div>
+            <div class="pill">Cookie login session</div>
+          </div>
+        </div>
+        <div class="panel stats">
+          <div class="stat">
+            <div class="label">Logged in as</div>
+            <div class="value" id="currentUserName">Guest</div>
+          </div>
+          <div class="stat">
+            <div class="label">Session</div>
+            <div class="value" id="sessionState">Signed out</div>
+          </div>
+          <div class="stat">
+            <div class="label">My rides as host</div>
+            <div class="value" id="hostRideCount">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">My requests</div>
+            <div class="value" id="requestCount">0</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="stack">
+          <div class="panel">
+            <div class="section-title">
+              <h2>Account</h2>
+              <span class="tiny" id="authHint">Login to load your rides</span>
+            </div>
+            <div class="tabs">
+              <button class="tab active" id="loginTab">Login</button>
+              <button class="tab" id="registerTab">Register</button>
+            </div>
+            <div id="loginForm" class="form-grid">
+              <input id="loginEmail" type="email" placeholder="Email" />
+              <input id="loginPassword" type="password" placeholder="Password" />
+              <button class="primary" id="loginBtn">Login</button>
+            </div>
+            <div id="registerForm" class="form-grid hidden">
+              <input id="regUsername" type="text" placeholder="Username" />
+              <input id="regEmail" type="email" placeholder="Email" />
+              <input id="regPassword" type="password" placeholder="Password" />
+              <input id="regFirstName" type="text" placeholder="First name" />
+              <input id="regLastName" type="text" placeholder="Last name" />
+              <input id="regUniversity" type="text" placeholder="University" />
+              <input id="regPhone" type="text" placeholder="Phone number" />
+              <button class="primary" id="registerBtn">Create account</button>
+            </div>
+            <div class="actions" style="margin-top: 12px;">
+              <button class="secondary" id="refreshBtn">Refresh all</button>
+              <button class="ghost" id="logoutBtn">Logout</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-title">
+              <h2>Create ride</h2>
+              <span class="tiny">Hosts only</span>
+            </div>
+            <div class="form-grid">
+              <input id="pickupLocation" type="text" placeholder="Pickup location" />
+              <input id="destination" type="text" placeholder="Destination" />
+              <input id="departureTime" type="datetime-local" />
+              <input id="availableSeats" type="number" min="0" step="1" placeholder="Available seats" />
+              <input id="pricePerPerson" type="number" min="0" step="0.5" placeholder="Price per person" />
+              <button class="primary" id="createRideBtn">Create ride</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="panel">
+            <div class="section-title">
+              <h2>Browse rides</h2>
+              <span class="tiny">Join as a rider</span>
+            </div>
+            <div class="split" style="margin-bottom: 12px;">
+              <input id="searchPickup" type="text" placeholder="Filter pickup" />
+              <input id="searchDestination" type="text" placeholder="Filter destination" />
+            </div>
+            <div class="actions" style="margin-bottom: 12px;">
+              <button class="secondary" id="loadRidesBtn">Load rides</button>
+            </div>
+            <div class="list" id="ridesList"></div>
+          </div>
+
+          <div class="split">
+            <div class="panel">
+              <div class="section-title">
+                <h2>Your rides as host</h2>
+                <span class="tiny">Approve or reject requests</span>
+              </div>
+              <div class="list" id="hostRidesList"></div>
+            </div>
+            <div class="panel">
+              <div class="section-title">
+                <h2>Your ride requests</h2>
+                <span class="tiny">See accepted / pending / rejected</span>
+              </div>
+              <div class="list" id="myRequestsList"></div>
+            </div>
+          </div>
+
+          <div class="split">
+            <div class="panel">
+              <div class="section-title">
+                <h2>Trips</h2>
+                <span class="tiny">Accepted rides appear here</span>
+              </div>
+              <div class="list" id="tripsList"></div>
+            </div>
+            <div class="panel">
+              <div class="section-title">
+                <h2>Notifications</h2>
+                <span class="tiny">Acceptances and updates</span>
+              </div>
+              <div class="list" id="notificationsList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const apiBase = "/api";
+      let currentUser = null;
+      let allRides = [];
+
+      const $ = (id) => document.getElementById(id);
+
+      function toast(message, kind = "info") {
+        const node = $("toast");
+        node.textContent = message;
+        node.style.borderColor = kind === "error" ? "rgba(248,113,113,0.4)" : "rgba(103,232,249,0.4)";
+        node.classList.add("show");
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(() => node.classList.remove("show"), 2600);
+      }
+
+      async function apiFetch(path, options = {}) {
+        const response = await fetch(`${apiBase}${path}`, {
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {}),
+          },
+          ...options,
+        });
+
+        const contentType = response.headers.get("content-type") || "";
+        const body = contentType.includes("application/json") ? await response.json() : await response.text();
+
+        if (!response.ok) {
+          const detail = body?.detail || body?.message || body || `Request failed (${response.status})`;
+          throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+        }
+
+        return body;
+      }
+
+      function fmtDate(value) {
+        if (!value) return "";
+        return new Date(value).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+      }
+
+      function statusBadge(status) {
+        const normalized = String(status || "").toLowerCase();
+        if (normalized === "accepted") return `<span class="badge good">accepted</span>`;
+        if (normalized === "pending") return `<span class="badge warn">pending</span>`;
+        if (normalized === "rejected") return `<span class="badge bad">rejected</span>`;
+        return `<span class="badge">${status}</span>`;
+      }
+
+      function renderRideCard(ride, showJoin = true) {
+        return `
+          <div class="card">
+            <div class="card-top">
+              <div>
+                <div class="title">${ride.pickup_location} → ${ride.destination}</div>
+                <div class="muted">Leave ${fmtDate(ride.departure_time)} · Seats ${ride.available_seats} · $${Number(ride.price_per_person).toFixed(2)}</div>
+                <div class="row">
+                  <span class="badge">Host #${ride.host_id}</span>
+                  <span class="badge">${ride.status}</span>
+                </div>
+              </div>
+              ${showJoin ? `<button class="secondary" data-join="${ride.id}">Join ride</button>` : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      async function loadMe() {
+        try {
+          currentUser = await apiFetch("/login/me");
+          $("currentUserName").textContent = currentUser.username;
+          $("sessionState").textContent = "Active";
+          $("authHint").textContent = `Signed in as ${currentUser.email}`;
+        } catch {
+          currentUser = null;
+          $("currentUserName").textContent = "Guest";
+          $("sessionState").textContent = "Signed out";
+          $("authHint").textContent = "Login to load your rides";
+        }
+      }
+
+      async function loadRides() {
+        const pickup = $("searchPickup").value.trim();
+        const destination = $("searchDestination").value.trim();
+        const params = new URLSearchParams();
+        if (pickup) params.set("pickup", pickup);
+        if (destination) params.set("destination", destination);
+        allRides = await apiFetch(`/rides/${params.toString() ? "?" + params.toString() : ""}`);
+        $("ridesList").innerHTML = allRides.length
+          ? allRides.map((ride) => renderRideCard(ride, true)).join("")
+          : `<div class="empty">No rides found.</div>`;
+        bindJoinButtons();
+      }
+
+      function bindJoinButtons() {
+        document.querySelectorAll("[data-join]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            try {
+              await apiFetch(`/rides/${button.dataset.join}/join`, { method: "POST" });
+              toast("Ride request sent.");
+              await loadAllSections();
+            } catch (error) {
+              toast(error.message, "error");
+            }
+          });
+        });
+      }
+
+      async function loadHostRides() {
+        if (!currentUser) {
+          $("hostRidesList").innerHTML = `<div class="empty">Log in as a host to view and manage requests.</div>`;
+          return;
+        }
+
+        const myHostRides = allRides.filter((ride) => ride.host_id === currentUser.id);
+        $("hostRideCount").textContent = String(myHostRides.length);
+
+        if (!myHostRides.length) {
+          $("hostRidesList").innerHTML = `<div class="empty">You haven’t created any rides yet.</div>`;
+          return;
+        }
+
+        const requestPayloads = await Promise.all(
+          myHostRides.map(async (ride) => ({
+            ride,
+            requests: await apiFetch(`/rides/${ride.id}/requests`),
+          }))
+        );
+
+        $("hostRidesList").innerHTML = requestPayloads.map(({ ride, requests }) => {
+          const requestItems = requests.length
+            ? requests.map((request) => `
+                <div class="card" style="margin-top: 10px;">
+                  <div class="card-top">
+                    <div>
+                      <div class="title">Passenger #${request.passenger_id}</div>
+                      <div class="muted">Requested ${fmtDate(request.created_at)}</div>
+                      <div class="row">${statusBadge(request.status)}</div>
+                    </div>
+                    <div class="actions">
+                      <button class="primary" data-accept="${ride.id}:${request.id}">Accept</button>
+                      <button class="danger" data-reject="${ride.id}:${request.id}">Reject</button>
+                    </div>
+                  </div>
+                </div>
+              `).join("")
+            : `<div class="empty" style="margin-top: 10px;">No requests yet.</div>`;
+
+          return `
+            <div class="card">
+              <div class="card-top">
+                <div>
+                  <div class="title">${ride.pickup_location} → ${ride.destination}</div>
+                  <div class="muted">${fmtDate(ride.departure_time)} · ${ride.available_seats} seats left</div>
+                </div>
+                <span class="badge">Ride #${ride.id}</span>
+              </div>
+              ${requestItems}
+            </div>
+          `;
+        }).join("");
+
+        bindHostActionButtons();
+      }
+
+      function bindHostActionButtons() {
+        document.querySelectorAll("[data-accept]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const [rideId, requestId] = button.dataset.accept.split(":");
+            try {
+              await apiFetch(`/rides/${rideId}/requests/${requestId}/accept`, { method: "POST" });
+              toast("Request accepted.");
+              await loadAllSections();
+            } catch (error) {
+              toast(error.message, "error");
+            }
+          });
+        });
+
+        document.querySelectorAll("[data-reject]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const [rideId, requestId] = button.dataset.reject.split(":");
+            try {
+              await apiFetch(`/rides/${rideId}/requests/${requestId}/reject`, { method: "POST" });
+              toast("Request rejected.");
+              await loadAllSections();
+            } catch (error) {
+              toast(error.message, "error");
+            }
+          });
+        });
+      }
+
+      async function loadMyRequests() {
+        if (!currentUser) {
+          $("myRequestsList").innerHTML = `<div class="empty">Log in as a rider to see your requests.</div>`;
+          $("requestCount").textContent = "0";
+          return;
+        }
+
+        const requests = await apiFetch("/rides/me/requests");
+        $("requestCount").textContent = String(requests.length);
+        $("myRequestsList").innerHTML = requests.length
+          ? requests.map((request) => `
+              <div class="card">
+                <div class="card-top">
+                  <div>
+                    <div class="title">${request.ride.pickup_location} → ${request.ride.destination}</div>
+                    <div class="muted">Ride #${request.ride_id} · ${fmtDate(request.created_at)}</div>
+                  </div>
+                  ${statusBadge(request.status)}
+                </div>
+                <div class="row">
+                  <span class="badge">Host #${request.ride.host_id}</span>
+                  <span class="badge">${fmtDate(request.ride.departure_time)}</span>
+                </div>
+              </div>
+            `).join("")
+          : `<div class="empty">You haven’t requested any rides yet.</div>`;
+      }
+
+      async function loadTrips() {
+        if (!currentUser) {
+          $("tripsList").innerHTML = `<div class="empty">Log in to see trips that were accepted.</div>`;
+          return;
+        }
+
+        const trips = await apiFetch("/trips/");
+        $("tripsList").innerHTML = trips.length
+          ? trips.map((trip) => `
+              <div class="card">
+                <div class="card-top">
+                  <div>
+                    <div class="title">${trip.destination}</div>
+                    <div class="muted">Ride #${trip.ride_id} · ${trip.role}</div>
+                  </div>
+                  <span class="badge ${trip.role === 'host' ? 'good' : 'warn'}">${trip.status}</span>
+                </div>
+              </div>
+            `).join("")
+          : `<div class="empty">No accepted trips yet.</div>`;
+      }
+
+      async function loadNotifications() {
+        if (!currentUser) {
+          $("notificationsList").innerHTML = `<div class="empty">Log in to see notifications.</div>`;
+          return;
+        }
+
+        const notifications = await apiFetch("/notifications/");
+        $("notificationsList").innerHTML = notifications.length
+          ? notifications.map((notification) => `
+              <div class="card">
+                <div class="card-top">
+                  <div>
+                    <div class="title">${notification.message}</div>
+                    <div class="muted">${fmtDate(notification.created_at)}</div>
+                  </div>
+                  <span class="badge ${notification.is_read ? 'good' : 'warn'}">${notification.is_read ? 'read' : 'new'}</span>
+                </div>
+              </div>
+            `).join("")
+          : `<div class="empty">No notifications yet.</div>`;
+      }
+
+      async function loadAllSections() {
+        await loadMe();
+        await loadRides();
+        await Promise.all([loadHostRides(), loadMyRequests(), loadTrips(), loadNotifications()]);
+      }
+
+      async function createRide() {
+        const payload = {
+          pickup_location: $("pickupLocation").value.trim(),
+          destination: $("destination").value.trim(),
+          departure_time: new Date($("departureTime").value).toISOString(),
+          available_seats: Number($("availableSeats").value),
+          price_per_person: Number($("pricePerPerson").value),
+        };
+
+        try {
+          await apiFetch("/rides/", { method: "POST", body: JSON.stringify(payload) });
+          toast("Ride created.");
+          await loadAllSections();
+        } catch (error) {
+          toast(error.message, "error");
+        }
+      }
+
+      async function login() {
+        try {
+          await apiFetch("/login/login", {
+            method: "POST",
+            body: JSON.stringify({
+              email: $("loginEmail").value.trim(),
+              password: $("loginPassword").value,
+            }),
+          });
+          toast("Logged in.");
+          await loadAllSections();
+        } catch (error) {
+          toast(error.message, "error");
+        }
+      }
+
+      async function register() {
+        try {
+          await apiFetch("/login/register", {
+            method: "POST",
+            body: JSON.stringify({
+              username: $("regUsername").value.trim(),
+              email: $("regEmail").value.trim(),
+              password: $("regPassword").value,
+              first_name: $("regFirstName").value.trim(),
+              last_name: $("regLastName").value.trim(),
+              university: $("regUniversity").value.trim(),
+              phone_number: $("regPhone").value.trim(),
+              is_verified_student: true,
+              profile_photo_url: null,
+            }),
+          });
+          toast("Account created. Now log in.");
+          $("loginTab").click();
+        } catch (error) {
+          toast(error.message, "error");
+        }
+      }
+
+      async function logout() {
+        try {
+          await apiFetch("/login/logout", { method: "POST" });
+        } catch (error) {
+          toast(error.message, "error");
+        } finally {
+          currentUser = null;
+          $("currentUserName").textContent = "Guest";
+          $("sessionState").textContent = "Signed out";
+          await loadAllSections();
+          toast("Logged out.");
+        }
+      }
+
+      $("loginTab").addEventListener("click", () => {
+        $("loginTab").classList.add("active");
+        $("registerTab").classList.remove("active");
+        $("loginForm").classList.remove("hidden");
+        $("registerForm").classList.add("hidden");
+      });
+
+      $("registerTab").addEventListener("click", () => {
+        $("registerTab").classList.add("active");
+        $("loginTab").classList.remove("active");
+        $("registerForm").classList.remove("hidden");
+        $("loginForm").classList.add("hidden");
+      });
+
+      $("loginBtn").addEventListener("click", login);
+      $("registerBtn").addEventListener("click", register);
+      $("logoutBtn").addEventListener("click", logout);
+      $("createRideBtn").addEventListener("click", createRide);
+      $("loadRidesBtn").addEventListener("click", loadAllSections);
+      $("refreshBtn").addEventListener("click", loadAllSections);
+
+      Promise.all([
+        loadMe(),
+        loadRides(),
+        loadMyRequests(),
+        loadTrips(),
+        loadNotifications(),
+      ]).catch((error) => toast(error.message, "error"));
+    </script>
   </body>
 </html>

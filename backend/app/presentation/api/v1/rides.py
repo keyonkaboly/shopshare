@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.application.services.driver_verification_service import is_user_verified
 from app.application.services.login_service import get_current_user
 from app.application.services.ride_request_service import create_request
 from app.application.services.ride_service import create_ride, delete_ride, get_ride, list_rides, update_ride
@@ -8,6 +9,7 @@ from app.presentation.api.schemas.ride_request_schemas import RideRequestRespons
 from app.presentation.api.schemas.rides_schemas import RidesCreate, RidesResponse, RidesUpdate
 from infrastructure.database.database import get_db
 from infrastructure.database.models import User
+from infrastructure.payments.stripe_client import REQUIRE_HOST_VERIFICATION
 
 ride_router = APIRouter(prefix="/rides", tags=["rides"])
 
@@ -18,6 +20,11 @@ def create_new_ride(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if REQUIRE_HOST_VERIFICATION and not is_user_verified(db, current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must complete driver verification before posting a ride",
+        )
     return create_ride(db, current_user.id, ride_data)
 
 

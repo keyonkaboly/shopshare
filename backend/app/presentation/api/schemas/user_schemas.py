@@ -17,6 +17,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(min_length=6)
+    terms_accepted: bool = Field(default=False)
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -42,3 +43,8 @@ class UserUpdate(BaseModel):
     username: Optional[str] = Field(default=None, min_length=6, max_length=25)
     password: Optional[str] = Field(default=None, min_length=6)
     email: Optional[EmailStr] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    university: Optional[str] = None
+    phone_number: Optional[str] = None
+    profile_photo_url: Optional[str] = None
