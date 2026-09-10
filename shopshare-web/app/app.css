@@ -74,8 +74,23 @@ body { background: var(--mint-bg); }
 .auth-card form { text-align: left; margin-top: 22px; display: flex; flex-direction: column; gap: 14px; }
 
 /* ---------- forms ---------- */
-label { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; font-weight: 600; color: var(--forest-dark); }
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--forest-dark);
+  /* Flex/grid items default to min-width:auto, which uses the input's own
+     intrinsic content width as a floor — inside a narrow grid column
+     (.grid-2) that floor is wider than the column, so the input (and this
+     label wrapping it) overflows past the card edge instead of shrinking
+     to fit. min-width: 0 removes that floor. */
+  min-width: 0;
+}
 input, textarea {
+  width: 100%;
+  min-width: 0;
   font: inherit;
   padding: 11px 14px;
   border-radius: 12px;
@@ -84,10 +99,11 @@ input, textarea {
   color: var(--ink);
   outline: none;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 input:focus, textarea:focus { border-color: var(--forest); }
 textarea { resize: vertical; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-width: 0; }
 .checkbox-row { flex-direction: row; align-items: flex-start; gap: 10px; font-weight: 500; font-size: 13.5px; color: var(--ink-soft); }
 .checkbox-row input { width: auto; margin-top: 3px; }
 .checkbox-row a { color: var(--forest); font-weight: 600; }

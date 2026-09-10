@@ -23,6 +23,21 @@ ALGORITHM = "HS256"
 # Minutes till your access token expires.
 ACCESS_TOKEN_EXPIRY_DURATION = 60 * 24 * 30
 
+# The access_token session cookie's SameSite/Secure attributes.
+#
+# Locally (frontend and backend both on http://localhost, just different
+# ports), "lax" + not-secure works fine — that's the default here.
+#
+# Once frontend and backend are on different real domains (e.g. a Vercel
+# site calling a Render backend), that's a genuinely cross-site request,
+# and browsers refuse to send a SameSite=Lax cookie on those — every
+# post-login request silently drops the session and looks like login
+# "did nothing". Set COOKIE_SAMESITE=none and COOKIE_SECURE=true in that
+# environment's .env (SameSite=None requires Secure, and requires HTTPS,
+# which Render/Vercel both give you by default).
+COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "lax").lower()
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

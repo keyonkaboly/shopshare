@@ -10,6 +10,8 @@ from infrastructure.database.database import get_db
 from infrastructure.database.models import User
 from infrastructure.security.hashing import (
     ACCESS_TOKEN_EXPIRY_DURATION,
+    COOKIE_SAMESITE,
+    COOKIE_SECURE,
     create_access_token,
     hash_password,
     verify_password,
@@ -88,7 +90,8 @@ def authenticate_user(
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRY_DURATION * 60,
         expires=ACCESS_TOKEN_EXPIRY_DURATION * 60,
-        samesite="lax",
+        samesite=COOKIE_SAMESITE,
+        secure=COOKIE_SECURE,
         path="/",
     )
 
@@ -131,7 +134,7 @@ def read_profile(current_user: User = Depends(get_current_user)):
 
 @login_router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="access_token", path="/", samesite=COOKIE_SAMESITE, secure=COOKIE_SECURE)
     return {"message": "Logged out successfully"}
 
 @login_router.get("/profile")
@@ -194,7 +197,7 @@ def delete_profile(
 ):
     delete_user_account(db, current_user)
 
-    response.delete_cookie(key="access_token", path="/")
+    response.delete_cookie(key="access_token", path="/", samesite=COOKIE_SAMESITE, secure=COOKIE_SECURE)
     return {"message": "Account and all related data deleted successfully"}
 
 
