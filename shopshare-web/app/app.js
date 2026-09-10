@@ -6,9 +6,10 @@
 // Config
 // ---------------------------------------------------------------------------
 
-// Change this once your backend is deployed publicly. Until then this
-// assumes `uvicorn main:app --reload` running locally on its default port.
-const API_BASE = window.SHOPSHARE_API_BASE || 'http://localhost:8000';
+// Deployed backend on Render. Override locally with
+// window.SHOPSHARE_API_BASE (set it in a <script> before app.js loads) if
+// you want to point at a local `uvicorn main:app --reload` instead.
+const API_BASE = window.SHOPSHARE_API_BASE || 'https://shopshare-sooi.onrender.com';
 
 // ---------------------------------------------------------------------------
 // API client — thin fetch wrapper. Cookies are httponly, so the browser
