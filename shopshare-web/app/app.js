@@ -47,6 +47,7 @@ const api = {
     if (params.pickup) qs.set('pickup', params.pickup);
     if (params.destination) qs.set('destination', params.destination);
     if (params.date) qs.set('date', params.date);
+    if (params.university) qs.set('university', params.university);
     const q = qs.toString();
     return request('GET', `/rides/${q ? `?${q}` : ''}`);
   },
@@ -418,12 +419,19 @@ function viewRegister() {
 
 async function viewRides() {
   const view = document.getElementById('view');
+  const myUniversity = (state.me && state.me.university || '').trim();
+
   view.innerHTML = `
     <div class="page">
       <div class="page__header">
         <h1>Find a ride</h1>
         <button class="btn btn--primary" id="newRideBtn">Post a ride</button>
       </div>
+      ${myUniversity ? `
+        <label class="checkbox-row uni-filter">
+          <input type="checkbox" id="uniFilterToggle" checked />
+          <span>Only show rides from <strong>${escapeHtml(myUniversity)}</strong></span>
+        </label>` : ''}
       <form class="search-bar" id="searchForm">
         <input type="text" name="pickup" placeholder="Pickup location" />
         <input type="text" name="destination" placeholder="Destination" />
@@ -434,22 +442,31 @@ async function viewRides() {
       <div id="ridesList" class="card-list"><p class="muted">Loading rides…</p></div>
     </div>`;
 
-  document.getElementById('newRideBtn').addEventListener('click', () => navigate('/rides/new'));
-  document.getElementById('searchForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const form = new FormData(e.target);
-    loadRides({
+  function currentFilters() {
+    const form = new FormData(document.getElementById('searchForm'));
+    const uniToggle = document.getElementById('uniFilterToggle');
+    return {
       pickup: form.get('pickup') || undefined,
       destination: form.get('destination') || undefined,
       date: form.get('date') || undefined,
-    });
+      university: (uniToggle && uniToggle.checked) ? myUniversity : undefined,
+    };
+  }
+
+  document.getElementById('newRideBtn').addEventListener('click', () => navigate('/rides/new'));
+  document.getElementById('searchForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    loadRides(currentFilters());
   });
   document.getElementById('clearSearch').addEventListener('click', () => {
     document.getElementById('searchForm').reset();
-    loadRides({});
+    loadRides(currentFilters());
+  });
+  document.getElementById('uniFilterToggle')?.addEventListener('change', () => {
+    loadRides(currentFilters());
   });
 
-  await loadRides({});
+  await loadRides(currentFilters());
 }
 
 async function loadRides(params) {
@@ -463,7 +480,7 @@ async function loadRides(params) {
   }
   const rides = res.data;
   if (!rides.length) {
-    list.innerHTML = `<div class="empty-state"><h3>No rides found</h3><p class="muted">Try different filters, or be the first to post one.</p></div>`;
+    list.innerHTML = `<div class="empty-state"><h3>No rides found</h3><p class="muted">Try different filters${params.university ? ', or uncheck the university filter above' : ''}, or be the first to post one.</p></div>`;
     return;
   }
   list.innerHTML = rides.map((r) => `

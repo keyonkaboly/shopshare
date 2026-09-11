@@ -107,6 +107,9 @@ textarea { resize: vertical; }
 .checkbox-row { flex-direction: row; align-items: flex-start; gap: 10px; font-weight: 500; font-size: 13.5px; color: var(--ink-soft); }
 .checkbox-row input { width: auto; margin-top: 3px; }
 .checkbox-row a { color: var(--forest); font-weight: 600; }
+.uni-filter { align-items: center; margin-bottom: 16px; cursor: pointer; }
+.uni-filter input { margin-top: 0; cursor: pointer; }
+.uni-filter strong { color: var(--forest-dark); }
 .form-card {
   background: var(--white);
   border: 1px solid var(--line);

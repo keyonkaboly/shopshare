@@ -43,12 +43,22 @@ def create_ride(db: Session, host_id: int, ride_data) -> Rides:
     return _attach_host_username(db, ride)
 
 
-def list_rides(db: Session, pickup: str | None = None, destination: str | None = None, date: str | None = None):
+def list_rides(
+    db: Session,
+    pickup: str | None = None,
+    destination: str | None = None,
+    date: str | None = None,
+    university: str | None = None,
+):
     query = db.query(Rides)
     if pickup:
         query = query.filter(Rides.pickup_location.ilike(f"%{pickup}%"))
     if destination:
         query = query.filter(Rides.destination.ilike(f"%{destination}%"))
+    if university:
+        # Rides don't carry their own university — it's the host's, so this
+        # filters by whoever posted the ride.
+        query = query.join(User, Rides.host_id == User.id).filter(User.university.ilike(f"%{university}%"))
     if date:
         try:
             target_day = datetime.fromisoformat(date)

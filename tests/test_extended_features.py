@@ -257,6 +257,34 @@ def test_list_rides_filters_by_pickup_destination_and_date(client):
     assert bad_date.status_code == 400
 
 
+def test_list_rides_filters_by_host_university(client):
+    register_user(client, "unihosta", "unihosta@example.com", university="State University")
+    register_user(client, "unihostb", "unihostb@example.com", university="Tech Institute")
+
+    login_user(client, "unihosta@example.com")
+    create_ride(client, hours_from_now=5, destination="State U Ride")
+
+    client.cookies.clear()
+    login_user(client, "unihostb@example.com")
+    create_ride(client, hours_from_now=6, destination="Tech Ride")
+
+    by_university = client.get("/rides/", params={"university": "State University"})
+    assert by_university.status_code == 200
+    results = by_university.json()
+    assert len(results) == 1
+    assert results[0]["destination"] == "State U Ride"
+    assert results[0]["host_username"] == "unihosta"
+
+    # Partial, case-insensitive match should also work.
+    partial = client.get("/rides/", params={"university": "tech"})
+    assert len(partial.json()) == 1
+    assert partial.json()[0]["destination"] == "Tech Ride"
+
+    # No filter still returns everything.
+    unfiltered = client.get("/rides/")
+    assert len(unfiltered.json()) == 2
+
+
 def test_only_host_can_update_or_delete_ride(client):
     register_user(client, "rideowner", "rideowner@example.com")
     register_user(client, "notowner", "notowner@example.com")
