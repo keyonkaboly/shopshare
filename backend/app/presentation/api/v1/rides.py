@@ -33,9 +33,10 @@ def get_all_rides(
     pickup: str | None = Query(default=None),
     destination: str | None = Query(default=None),
     date: str | None = Query(default=None),
+    university: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
-    return list_rides(db, pickup=pickup, destination=destination, date=date)
+    return list_rides(db, pickup=pickup, destination=destination, date=date, university=university)
 
 
 @ride_router.get("/{ride_id}", response_model=RidesResponse)

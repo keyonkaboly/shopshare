@@ -405,8 +405,18 @@ function viewRegister() {
     };
     const res = await api.register(body);
     if (res.ok) {
-      toast('Account created — log in to continue', 'success');
-      navigate('/login');
+      // Log straight in with the credentials just submitted, rather than
+      // sending the user to a separate login screen for details they just
+      // typed a moment ago.
+      const loginRes = await api.login({ email: body.email, password: body.password });
+      if (loginRes.ok) {
+        navigate('/');
+      } else {
+        // Very unlikely (registration just succeeded with these same
+        // credentials), but don't strand the user silently if it happens.
+        toast('Account created — log in to continue', 'success');
+        navigate('/login');
+      }
     } else {
       document.getElementById('registerError').textContent = errorMessage(res.data, 'Registration failed');
     }
